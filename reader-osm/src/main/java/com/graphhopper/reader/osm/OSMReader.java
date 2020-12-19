@@ -703,8 +703,19 @@ public class OSMReader implements DataReader, TurnCostParser.ExternalInternalMap
         if (pointList.size() > 2)
             iter.setWayGeometry(pointList.shallowCopy(1, pointList.size() - 1, false));
 
+        checkDistanceConsistency(iter);
+
         storeOsmWayID(iter.getEdge(), wayOsmId);
         return iter;
+    }
+
+    private void checkDistanceConsistency(EdgeIteratorState edge) {
+        final double tolerance = 10;
+        final double edgeDistance = edge.getDistance();
+        final double geometryDistance = distCalc.calcDistance(edge.fetchWayGeometry(FetchMode.ALL));
+        if (Math.abs(edgeDistance - geometryDistance) > tolerance)
+            throw new IllegalStateException("Suspicious distance for edge: " + edge + " " + edgeDistance + " vs. " + geometryDistance
+                    + ", difference: " + (edgeDistance - geometryDistance));
     }
 
     /**
